@@ -34,6 +34,7 @@ extern char RunFile[];
 extern int RestoringImage;
 extern bool ForceEnableRepl;
 extern int VerboseFlag;
+extern int DebugFlag;
 
 extern int ParseCommandLine(int, char**);
 

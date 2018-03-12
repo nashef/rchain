@@ -41,6 +41,7 @@ char BootFile[MAXPATHLEN] = "boot.rbl";
 char RunFile[MAXPATHLEN] = "";
 bool ForceEnableRepl = false;
 int VerboseFlag = 0;
+int DebugFlag = 0;
 
 /*
  * RestoringImage is set to 0 in the initial boot-rosette image, but it
@@ -60,6 +61,7 @@ void usage(const char* name, bool fatal = false, const char* msg = NULL) {
             "\n"
             " -h, --help             Prints this message and exits.\n"
             " -v, --verbose          Verbose mode\n"
+            " --debug                Debug mode\n"
             " -q, --quiet            Disable verbose mode\n"
             " -t, --tenure=NUM_GCS   Number of GCs before tenuring an object\n"
             " -p, --paranoid-gc      Enable paranoid GC\n"
@@ -104,6 +106,7 @@ int ParseCommandLine(int argc, char** argv) {
     const struct option long_options[] = {
         /* Flags */
         {"verbose", no_argument, NULL, 'v'},
+        {"debug", no_argument, NULL, 'D'},
         {"quiet", no_argument, NULL, 'q'},
         {"interactive-repl", no_argument, NULL, 'i'},
 
@@ -135,7 +138,7 @@ int ParseCommandLine(int argc, char** argv) {
 
     while (1) {
         int option_index = 0;
-        c = getopt_long(argc, argv, "+qhvdI:t:p:is:o:b:", long_options,
+        c = getopt_long(argc, argv, "+qhvDdI:t:p:is:o:b:", long_options,
                         &option_index);
 
         if (-1 == c) {
@@ -148,6 +151,10 @@ int ParseCommandLine(int argc, char** argv) {
         switch (c) {
         case 'v':
             VerboseFlag = 1;
+            break;
+
+        case 'D':
+            DebugFlag = 1;
             break;
 
         case 'q':
@@ -210,10 +217,15 @@ int ParseCommandLine(int argc, char** argv) {
         }
     }
 
+    if (DebugFlag) {
+        fprintf(stderr, "ParseCommandLine: debugging enabled...\n");
+    }
+
     if (VerboseFlag) {
         fprintf(stderr, "ParseCommandLine: Returning optind=%d of argc=%d\n",
                 optind, argc);
     }
+
 
     return optind;
 }
