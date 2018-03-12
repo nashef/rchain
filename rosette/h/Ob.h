@@ -430,53 +430,6 @@ pOb BASE(pOb v);
  * value and expects a second argument of type "void (Ob::*) ()".
  */
 
-
-typedef pOb (Ob::*PSOb__PSOb)();
-typedef int (Ob::*SI__PSOb)();
-typedef void (Ob::*V__PSOb)();
-
-extern int useIfPtr(void*, PSOb__PSOb);
-extern int useIfPtr(pOb, SI__PSOb);
-extern void useIfPtr(pOb, V__PSOb);
-
-/*
- * Use MF_ADDR(fn) to get the address of a member function.
- */
-
-#define MF_ADDR(fn) &fn
-
-enum GcFlags {
-    f_forwarded,   // TRUE iff object has been forwarded.
-    f_remembered,  // TRUE iff object has been remembered.
-    f_marked,      // TRUE iff object has been marked.
-    f_freed,       // TRUE iff object is on a free list somewhere.
-    f_visited,     // TRUE iff object has been visited (auxiliary).
-    f_foreign,     // TRUE iff object contains foreign pointers
-};
-
-struct HeaderLayout {
-    uint8_t flags;  // See above
-    uint8_t age;    // The number of scavenges the object has survived.
-    uint16_t size;  // The total size (in bytes) of the object.
-
-    HeaderLayout() : flags(0), age(0), size(0) {}
-};
-
-union HeaderBits {
-    HeaderLayout fields;
-    uint32_t all;
-
-    // NB(leaf): The heap allocation routines write information into the header
-    // that need to be preserved, so any default ctor can't initialize any of
-    // our variables. This needs to be fixed.
-    HeaderBits() {}
-    HeaderBits(HeaderBits& hb) { all = hb.all; }
-    HeaderBits(int sz) {
-        all = 0;
-        fields.size = sz;
-    }
-};
-
 struct convertArgReturnPair {
     uint32_t val;
     int failp;

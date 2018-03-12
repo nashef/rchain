@@ -21,25 +21,28 @@
 #define _RBL_ObStk_h
 
 #include "rosette.h"
-#include "PtrCollect.h"
 #include "Ob.h"
 
-class ObStk : public PtrCollection {
+#include <deque>
+
+class ObStk {
+   private:
+       std::deque<Ob*> ptrs_; 
+
    public:
-    ObStk() : PtrCollection() {}
-    ObStk(int sz) : PtrCollection(sz) {}
+    ObStk() {}
+    ObStk(int sz) {}
 
     void reset();
-    void push(Ob* o) { PtrCollection::add((void*)o); }
-    Ob* pop() { return (Ob*)(*--next); }
-    Ob*& top(int n) {
-        Ob** p = (Ob**)(next - n);
-        return *p;
-    }
 
+    void push(Ob* o);
+    Ob* pop();
+
+    /*
     int traversePtrs(PSOb__PSOb);
     int traversePtrs(SI__PSOb);
     void traversePtrs(V__PSOb);
+    */
 
     void scavenge();
     void mark();

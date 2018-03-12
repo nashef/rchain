@@ -21,6 +21,21 @@
 
 void ObStk::reset() { next = array; }
 
+void ObStk::push(Ob* o) {
+    if (NULL != o) {
+        ptrs_.push_front(o);
+    }
+
+    // TODO(leaf): Should it be an error to push a null pointer to this?
+        
+    return;
+}
+
+Ob* ObStk::pop() {
+    auto x = ptrs_.front();
+    ptrs_.pop_front();
+    return x;
+}
 
 int ObStk::traversePtrs(PSOb__PSOb f) {
     int sum = 0;
