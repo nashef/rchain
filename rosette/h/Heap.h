@@ -179,9 +179,7 @@ class ProtectedItem {
     friend void Init_Heap();
 
    public:
-    ProtectedItem(void* v) : next(root), item(v) {
-        root = this;
-    }
+    ProtectedItem(void* v) : next(root), item(v) { root = this; }
 
     ~ProtectedItem() { root = next; }
 };

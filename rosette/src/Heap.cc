@@ -1122,15 +1122,13 @@ void ProtectedItem::check() {
 
 
 Ob* Ob::relocate() {
+    if (DebugFlag) {
+        fprintf(stderr, "Ob::relocate: relocating 0x%x...\n", (uintptr_t) this);
+    }
+
     /*
-     * Please excuse the goto's in the following code, as well as the
-     * explicit references to the various base and limit pointers, but
-     * the compiler did an inadequate job of compiling this important
-     * routine.
-     *
-     * Notice that this routine depends critically upon the relative
-     * ordering of the old space, the infant space and the past survivor
-     * space:
+     * NB: This routine depends critically upon the relative ordering of the
+     * old space, the infant space and the past survivor space:
      *
      * 	past survivor addresses < infant addresses < old space addresses
      *
@@ -1142,24 +1140,60 @@ Ob* Ob::relocate() {
         return (Ob*)INVALID;
     }
 
-    if ((void*)this >= heap->newSpace->limit)
-        goto nochange;
-    if ((void*)this >= heap->newSpace->infants->base)
-        goto relocate;
-    if ((void*)this < heap->newSpace->pastSurvivors->base)
-        goto nochange;
-    if ((void*)this < heap->newSpace->pastSurvivors->limit)
-        goto relocate;
+    if ((void*)this >= heap->newSpace->limit) {
+        if (DebugFlag) {
+            fprintf(stderr,
+                    "Ob::relocate: this not in newSpace: "
+                    "this(0x%x) >= newSpace->limit(0x%x)\n ",
+                    (uintptr_t) this, (uintptr_t)heap->newSpace->limit);
+        }
 
-nochange:
-    return this;
-
-relocate:
-    if (FORWARDED(this)) {
-        return forwardingAddress();
-    } else {
-        return heap->copyAndForward(this);
+        return this;
     }
+
+    if ((void*)this >= heap->newSpace->infants->base) {
+        if (DebugFlag) {
+            fprintf(stderr,
+                    "Ob::relocate: "
+                    "this(0x%x) >= newSpace->limit->base(0x%x)\n ",
+                    (uintptr_t) this, (uintptr_t)heap->newSpace->infants->base);
+        }
+
+        return this;
+    }
+
+    if ((void*)this < heap->newSpace->pastSurvivors->base) {
+        if (DebugFlag) {
+            fprintf(stderr,
+                    "Ob::relocate: "
+                    "this(0x%x) >= newSpace->pastSurvivors->base(0x%x)\n ",
+                    (uintptr_t) this,
+                    (uintptr_t)heap->newSpace->pastSurvivors->base);
+        }
+
+        return this;
+    }
+
+    if ((void*)this < heap->newSpace->pastSurvivors->limit) {
+        if (DebugFlag) {
+            fprintf(stderr,
+                    "Ob::relocate: "
+                    "this(0x%x) >= newSpace->pastSurvivors->limit(0x%x)\n ",
+                    (uintptr_t) this,
+                    (uintptr_t)heap->newSpace->pastSurvivors->limit);
+        }
+        if (FORWARDED(this)) {
+            return forwardingAddress();
+        } else {
+            return heap->copyAndForward(this);
+        }
+    }
+
+    fprintf(stderr,
+            "Ob::relocate: reached relocation checks without "
+            "a decision. Not relocating 0x%x\n",
+            (uintptr_t) this);
+    return this;
 }
 
 void* palloc(unsigned sz) {
@@ -1168,77 +1202,38 @@ void* palloc(unsigned sz) {
 }
 
 void* palloc1(unsigned sz, void* ob0) {
-    void* loc = heap->alloc(sz);
-    if (!loc) {
-        ProtectedItem pob0(ob0);
-        loc = heap->scavengeAndAlloc(sz);
-    }
-    return loc;
+    ProtectedItem pob0(ob0);
+    return palloc(sz);
 }
 
 
 void* palloc2(unsigned sz, void* ob0, void* ob1) {
-    void* loc = heap->alloc(sz);
-    if (!loc) {
-        ProtectedItem pob0(ob0);
-        ProtectedItem pob1(ob1);
-        loc = heap->scavengeAndAlloc(sz);
-    }
-    return loc;
+    ProtectedItem pob1(ob1);
+    return palloc1(sz, ob0);
 }
 
 
 void* palloc3(unsigned sz, void* ob0, void* ob1, void* ob2) {
-    void* loc = heap->alloc(sz);
-    if (!loc) {
-        ProtectedItem pob0(ob0);
-        ProtectedItem pob1(ob1);
-        ProtectedItem pob2(ob2);
-        loc = heap->scavengeAndAlloc(sz);
-    }
-    return loc;
+    ProtectedItem pob2(ob2);
+    return palloc2(sz, ob0, ob1);
 }
 
 
 void* palloc4(unsigned sz, void* ob0, void* ob1, void* ob2, void* ob3) {
-    void* loc = heap->alloc(sz);
-    if (!loc) {
-        ProtectedItem pob0(ob0);
-        ProtectedItem pob1(ob1);
-        ProtectedItem pob2(ob2);
-        ProtectedItem pob3(ob3);
-        loc = heap->scavengeAndAlloc(sz);
-    }
-    return loc;
+    ProtectedItem pob3(ob3);
+    return palloc3(sz, ob0, ob1, ob2);
 }
 
 
 void* palloc5(unsigned sz, void* ob0, void* ob1, void* ob2, void* ob3,
               void* ob4) {
-    void* loc = heap->alloc(sz);
-    if (!loc) {
-        ProtectedItem pob0(ob0);
-        ProtectedItem pob1(ob1);
-        ProtectedItem pob2(ob2);
-        ProtectedItem pob3(ob3);
-        ProtectedItem pob4(ob4);
-        loc = heap->scavengeAndAlloc(sz);
-    }
-    return loc;
+    ProtectedItem pob4(ob4);
+    return palloc4(sz, ob0, ob1, ob2, ob3);
 }
 
 
 void* palloc6(unsigned sz, void* ob0, void* ob1, void* ob2, void* ob3,
               void* ob4, void* ob5) {
-    void* loc = heap->alloc(sz);
-    if (!loc) {
-        ProtectedItem pob0(ob0);
-        ProtectedItem pob1(ob1);
-        ProtectedItem pob2(ob2);
-        ProtectedItem pob3(ob3);
-        ProtectedItem pob4(ob4);
-        ProtectedItem pob5(ob5);
-        loc = heap->scavengeAndAlloc(sz);
-    }
-    return loc;
+    ProtectedItem pob5(ob5);
+    return palloc5(sz, ob0, ob1, ob2, ob3, ob4);
 }
